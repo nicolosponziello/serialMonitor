@@ -1,7 +1,7 @@
 import threading
 import sys 
 import os
-from time import gmtime, strftime
+from time import gmtime, sleep, strftime
 import time
 import serial
 import serial.tools.list_ports
@@ -141,6 +141,9 @@ class serialMonitor(QMainWindow):
         if self.serial_port is not None:
             self.serial_port.close()
         self.serial_port = serial.Serial(self.current_port, self.current_baud)
+        self.serial_port.setDTR(False)
+        sleep(1)
+        self.serial_port.setDTR(True)
         self.statusbar.showMessage("Connected")
         while self.reading == True:
             try:
