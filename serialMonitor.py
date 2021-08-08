@@ -18,10 +18,10 @@ class serialMonitor(QMainWindow):
     first_conn = True
     input_send_text = ''
     current_port = ''
-    current_baud = 9600
+    current_baud = 115200
     logging_dir = "serialMonitorLogs"
     filename = ''+logging_dir +'/' + strftime("%a-%d-%b-%Y-%H-%M-%S", gmtime()) + '.txt'
-    baudrates = ["9600", "115200", "300", "1200", "2400", "4800", "14400", "19200", "31250", "38400", "57600"]
+    baudrates = ["115200", "9600", "300", "1200", "2400", "4800", "14400", "19200", "31250", "38400", "57600"]
 
     def __init__(self):
         super(serialMonitor, self).__init__()
