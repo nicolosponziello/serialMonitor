@@ -17,7 +17,6 @@ class serialMonitor(QMainWindow):
     serial_port = None
     reading = False
     logging = False
-    first_conn = True
     input_send_text = ''
     current_port = ''
     current_baud = 115200
@@ -139,12 +138,9 @@ class serialMonitor(QMainWindow):
     def read(self):
         self.current_port = str(self.portBox.currentText())
         self.current_baud = int(self.baudBox.currentText())
-        if self.first_conn == True:
-            self.serial_port = serial.Serial(self.current_port, self.current_baud)
-        else:
-            self.statusbar.showMessage("Reconnecting. Waiting 20s before next connection.")
-            time.sleep(20)
-            self.serial_port = serial.Serial(self.current_port, self.current_baud)
+        if self.serial_port is not None:
+            self.serial_port.close()
+        self.serial_port = serial.Serial(self.current_port, self.current_baud)
         self.statusbar.showMessage("Connected")
         while self.reading == True:
             try:
@@ -154,7 +150,7 @@ class serialMonitor(QMainWindow):
                 self.reader.emit("Disconnect of USB->UART occured. \nRestart needed!")
                 self.statusbar.showMessage("Disconnected")
                 quit()
-        self.arduino.close()
+        self.serial_port.close()
 
     def sendToSerial(self):
         if self.reading == True:
@@ -168,7 +164,7 @@ class serialMonitor(QMainWindow):
 
     def stopReading(self):
         self.reading = False
-        self.first_conn = False
+        self.reading_thread.join()
         self.statusbar.showMessage("Disconnected")
 
     def enableLogging(self, state):
