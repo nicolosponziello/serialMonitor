@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui, QtCore, QtWidgets
 from sys import platform as _platform
+import atexit
 
 class serialMonitor(QMainWindow):
     reader = pyqtSignal(str)
@@ -22,6 +23,8 @@ class serialMonitor(QMainWindow):
     logging_dir = "serialMonitorLogs"
     filename = ''+logging_dir +'/' + strftime("%a-%d-%b-%Y-%H-%M-%S", gmtime()) + '.txt'
     baudrates = ["115200", "9600", "300", "1200", "2400", "4800", "14400", "19200", "31250", "38400", "57600"]
+    reading_thread = None
+    reading_thread_multiple = None
 
     def __init__(self):
         super(serialMonitor, self).__init__()
@@ -128,12 +131,14 @@ class serialMonitor(QMainWindow):
     def startReading(self):
         if not self.reading:
             self.reading = True
-            thread = threading.Thread(target=self.read)
-            thread.start()
+            self.reading_thread = threading.Thread(target=self.read)
+            self.reading_thread.setDaemon(True)
+            self.reading_thread.start()
 
     def startReadingPorts(self):
-        thread2 = threading.Thread(target=self.serial_ports)
-        thread2.start()
+        self.reading_thread_multiple = threading.Thread(target=self.serial_ports)
+        self.reading_thread_multiple.setDaemon(True)
+        self.reading_thread_multiple.start()
 
     def read(self):
         self.current_port = str(self.portBox.currentText())
@@ -187,8 +192,16 @@ class serialMonitor(QMainWindow):
             file.write("\n")
             file.close()
 
+    def cleanup(self):
+        if(self.reading_thread is not None):
+            self.reading_thread = None
+        if(self.reading_thread_multiple is not None):
+            self.reading_thread_multiple = None
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = serialMonitor()
+    atexit.register(window.cleanup)
     window.show()
     sys.exit(app.exec_())
