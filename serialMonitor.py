@@ -14,7 +14,7 @@ import glob
 
 class serialMonitor(QMainWindow):
     reader = pyqtSignal(str)
-    arduino = serial.Serial()
+    serial_port = None
     reading = False
     logging = False
     first_conn = True
@@ -25,7 +25,7 @@ class serialMonitor(QMainWindow):
     filename = ''+logging_dir +'/' + strftime("%a-%d-%b-%Y-%H-%M-%S", gmtime()) + '.txt'
     baudrates = ["115200", "9600", "300", "1200", "2400", "4800", "14400", "19200", "31250", "38400", "57600"]
     reading_thread = None
-    reading_thread_multiple = None
+    available_ports = []
 
     def __init__(self):
         super(serialMonitor, self).__init__()
@@ -33,7 +33,6 @@ class serialMonitor(QMainWindow):
             os.makedirs(self.logging_dir)
         font = QtGui.QFont()
         font.setPointSize(10)
-        self.startReadingPorts()
         self.portLabel = QtWidgets.QLabel()
         self.portLabel.setText('Serial port:')
         self.portLabel.move(10, 10)
@@ -94,34 +93,35 @@ class serialMonitor(QMainWindow):
         self.widget.setFont(font)
         self.setCentralWidget(self.widget)
 
-    def serial_ports(self):
+        self.getAvailablePorts()
+
+
+    def getAvailablePorts(self):
         if _platform.startswith('linux'):
             ports = glob.glob('/dev/tty[A-Za-z]*')
         elif _platform.startswith('win32'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
         elif _platform.startswith('darwin'):
             ports = ['/dev/cu.serial%s' % (i + 1) for i in range(256)]
-        result = []
-        while True:
-            for port in ports:
-                if port in result:
-                    try:
-                        s = serial.Serial(port)
-                        s.close()
-                    except(OSError, serial.SerialException):
-                        if port != self.current_port:
-                            result.remove(port)
-                            self.portBox.removeItem(self.portBox.findText(port))
-                else:
-                    try:
-                        s = serial.Serial(port)
-                        s.close()
-                        if (self.portBox.findText(port) == -1):
-                            result.append(port)
-                            self.portBox.addItem(str(port))
-                    except (OSError, serial.SerialException):
-                        pass
-            time.sleep(2)
+        self.available_ports = []
+        for port in ports:
+            if port in self.available_ports:
+                try:
+                    s = serial.Serial(port)
+                    s.close()
+                except(OSError, serial.SerialException):
+                    if port != self.current_port:
+                        self.available_ports.remove(port)
+                        self.portBox.removeItem(self.portBox.findText(port))
+            else:
+                try:
+                    s = serial.Serial(port)
+                    s.close()
+                    if (self.portBox.findText(port) == -1):
+                        self.available_ports.append(port)
+                        self.portBox.addItem(str(port))
+                except (OSError, serial.SerialException):
+                    pass
 
     def enableScroll(self, state):
         if state == Qt.Checked:
@@ -136,24 +136,19 @@ class serialMonitor(QMainWindow):
             self.reading_thread.setDaemon(True)
             self.reading_thread.start()
 
-    def startReadingPorts(self):
-        self.reading_thread_multiple = threading.Thread(target=self.serial_ports)
-        self.reading_thread_multiple.setDaemon(True)
-        self.reading_thread_multiple.start()
-
     def read(self):
         self.current_port = str(self.portBox.currentText())
         self.current_baud = int(self.baudBox.currentText())
         if self.first_conn == True:
-            self.arduino = serial.Serial(self.current_port, self.current_baud)
+            self.serial_port = serial.Serial(self.current_port, self.current_baud)
         else:
             self.statusbar.showMessage("Reconnecting. Waiting 20s before next connection.")
             time.sleep(20)
-            self.arduino = serial.Serial(self.current_port, self.current_baud)
+            self.serial_port = serial.Serial(self.current_port, self.current_baud)
         self.statusbar.showMessage("Connected")
         while self.reading == True:
             try:
-                data = self.arduino.readline()[:-1].decode("utf-8", "ignore")
+                data = self.serial_port.readline()[:-1].decode("utf-8", "ignore")
                 self.reader.emit(str(data))
             except serial.SerialException:
                 self.reader.emit("Disconnect of USB->UART occured. \nRestart needed!")
@@ -196,9 +191,7 @@ class serialMonitor(QMainWindow):
     def cleanup(self):
         if(self.reading_thread is not None):
             self.reading_thread = None
-        if(self.reading_thread_multiple is not None):
-            self.reading_thread_multiple = None
-        self.arduino.close()
+        self.serial_port.close()
 
 
 if __name__ == '__main__':
