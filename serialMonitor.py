@@ -39,6 +39,9 @@ class serialMonitor(QMainWindow):
         self.baudLabel = QtWidgets.QLabel()
         self.baudLabel.setText('Baud rate:')
         self.portBox = QtWidgets.QComboBox()
+        self.reset_btn = QPushButton()
+        self.reset_btn.setText("Reboot")
+        self.reset_btn.clicked.connect(self.reboot)
 
         self.baudBox = QtWidgets.QComboBox()
         for i in self.baudrates:
@@ -77,6 +80,7 @@ class serialMonitor(QMainWindow):
         self.layoutH.addWidget(self.portBox)
         self.layoutH.addWidget(self.baudLabel)
         self.layoutH.addWidget(self.baudBox)
+        self.layoutH.addWidget(self.reset_btn)
         self.layoutH.addWidget(self.scroll_button)
         self.layoutH.addWidget(self.logging_button)
         self.layoutV.addLayout(self.layoutH)
@@ -94,6 +98,12 @@ class serialMonitor(QMainWindow):
         self.setCentralWidget(self.widget)
 
         self.getAvailablePorts()
+
+    
+    def reboot(self):
+        self.serial_port.setDTR(False)
+        sleep(1)
+        self.serial_port.setDTR(True)
 
 
     def getAvailablePorts(self):
