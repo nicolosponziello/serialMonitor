@@ -11,6 +11,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from sys import platform as _platform
 import atexit
 import glob
+from datetime import datetime
 
 class serialMonitor(QMainWindow):
     reader = pyqtSignal(str)
@@ -148,7 +149,7 @@ class serialMonitor(QMainWindow):
         while self.reading == True:
             try:
                 data = self.serial_port.readline()[:-1].decode("utf-8", "ignore")
-                self.reader.emit(str(data))
+                self.reader.emit(datetime.now().strftime("%H:%M:%S") + ": " + str(data))
             except serial.SerialException:
                 self.reader.emit("Disconnect of USB->UART occured. \nRestart needed!")
                 self.statusbar.showMessage("Disconnected")
