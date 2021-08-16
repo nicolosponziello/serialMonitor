@@ -152,9 +152,6 @@ class serialMonitor(QMainWindow):
         if self.serial_port is not None:
             self.serial_port.close()
         self.serial_port = serial.Serial(self.current_port, self.current_baud)
-        self.serial_port.setDTR(False)
-        sleep(1)
-        self.serial_port.setDTR(True)
         self.statusbar.showMessage("Connected")
         while self.reading == True:
             try:
