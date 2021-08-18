@@ -42,6 +42,9 @@ class serialMonitor(QMainWindow):
         self.reset_btn = QPushButton()
         self.reset_btn.setText("Reboot")
         self.reset_btn.clicked.connect(self.reboot)
+        self.clear_btn = QPushButton()
+        self.clear_btn.setText("Clear")
+        self.clear_btn.clicked.connect(self.clear_output)
 
         self.baudBox = QtWidgets.QComboBox()
         for i in self.baudrates:
@@ -81,6 +84,7 @@ class serialMonitor(QMainWindow):
         self.layoutH.addWidget(self.baudLabel)
         self.layoutH.addWidget(self.baudBox)
         self.layoutH.addWidget(self.reset_btn)
+        self.layoutH.addWidget(self.clear_btn)
         self.layoutH.addWidget(self.scroll_button)
         self.layoutH.addWidget(self.logging_button)
         self.layoutV.addLayout(self.layoutH)
@@ -104,6 +108,9 @@ class serialMonitor(QMainWindow):
         self.serial_port.setDTR(False)
         sleep(1)
         self.serial_port.setDTR(True)
+
+    def clear_output(self):
+        self.textEdit.clear()
 
 
     def getAvailablePorts(self):
