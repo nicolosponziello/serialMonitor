@@ -167,6 +167,7 @@ class serialMonitor(QMainWindow):
             except serial.SerialException:
                 self.reader.emit("Disconnect of USB->UART occured. \nRestart needed!")
                 self.statusbar.showMessage("Disconnected")
+                self.stopReading()
                 quit()
         self.serial_port.close()
 
