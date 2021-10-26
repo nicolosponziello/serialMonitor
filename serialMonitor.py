@@ -173,7 +173,7 @@ class serialMonitor(QMainWindow):
 
     def sendToSerial(self):
         if self.reading == True:
-            self.arduino.write(self.input_send_text.encode())
+            self.serial_port.write(self.input_send_text.encode())
             self.inputBox.setText('')
         else: 
             self.statusbar.showMessage("Can't send. Create a connection first!")
