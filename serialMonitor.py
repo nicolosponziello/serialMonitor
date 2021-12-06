@@ -150,7 +150,7 @@ class serialMonitor(QMainWindow):
         if not self.reading:
             self.reading = True
             self.reading_thread = threading.Thread(target=self.read)
-            self.reading_thread.setDaemon(True)
+            self.reading_thread.daemon = True
             self.reading_thread.start()
 
     def read(self):
